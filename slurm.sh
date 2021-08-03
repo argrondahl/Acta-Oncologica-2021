@@ -49,5 +49,5 @@ echo "Finished seting up files."
 nvidia-modprobe -u -c=0
 
 # Run experiment
-export ITER_PER_EPOCH=250
+# export ITER_PER_EPOCH=250
 singularity exec --nv deoxys.sif python experiment.py $1 $HOME/hnperf/$2 --temp_folder $SCRATCH/hnperf/$2 --analysis_folder $SCRATCH/analysis/$2 --epochs $3 ${@:4}

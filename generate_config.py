@@ -9,15 +9,15 @@ dirs = os.listdir('./templates')
 base_template = {
     "train_params": {
         "epochs": 200,
-        "callbacks": [
-            {
-                "class_name": "EarlyStopping",
-                "config": {
-                    "monitor": "val_loss",
-                    "patience": 30
-                }
-            }
-        ]
+        # "callbacks": [
+        #     {
+        #         "class_name": "EarlyStopping",
+        #         "config": {
+        #             "monitor": "val_loss",
+        #             "patience": 30
+        #         }
+        #     }
+        # ]
     }
 }
 
