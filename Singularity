@@ -9,7 +9,7 @@ Stage: build
     pip install tensorflow-addons
     pip install https://github.com/huynhngoc/deoxys-image/archive/master.zip
     pip install https://github.com/huynhngoc/deoxys/archive/master.zip
-    pip install opencv-python
+    pip install opencv-python-headless
     pip install comet-ml
     pip install scikit-image
     pip install scikit-learn
