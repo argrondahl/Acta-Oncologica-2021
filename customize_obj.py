@@ -64,7 +64,7 @@ class ElasticDeformPreprocesser(BasePreprocessor):
     def stretch_indices(self, image, random_state):
         """Get stretching indices
         """
-        
+
         shape = image.shape
         alpha = self.alpha*shape[1]
         stretching_std = self.sigma*shape[1]
@@ -82,7 +82,7 @@ class ElasticDeformPreprocesser(BasePreprocessor):
          Convolutional Neural Networks applied to Visual Document Analysis", in
          Proc. of the International Conference on Document Analysis and
          Recognition, 2003.
-         https://www.microsoft.com/en-us/research/wp-content/uploads/2003/08/icdar03.pdf 
+         https://www.microsoft.com/en-us/research/wp-content/uploads/2003/08/icdar03.pdf
 
         Based on https://gist.github.com/erniejunior/601cdf56d2b424757de5
         Borrowed from: https://www.kaggle.com/bguberfain/elastic-transform-for-data-augmentation
@@ -102,13 +102,13 @@ class ElasticDeformPreprocesser(BasePreprocessor):
         if random.randint(0,100) < 50:
             images = images.copy()
             images = images.astype(np.float32, copy=False)
+            print(images.shape, targets.shape)
             imgs_tar = cv2.merge((images, targets.astype(np.float32, copy=False)))
 
             transformed = self.elastic_transform(imgs_tar).astype(np.int32, copy=False)
             deformed_imgs = transformed[...,:-1]
             deformed_tars = transformed[...,-1]
-            
+
             return deformed_imgs, deformed_tars.reshape(deformed_tars.shape[0],deformed_tars.shape[1],1)
         else:
             return images, targets
-
