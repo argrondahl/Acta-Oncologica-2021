@@ -36,6 +36,11 @@ if __name__ == '__main__':
     args, unknown = parser.parse_known_args()
 
 
+    if 'patch' in args.log_folder:
+        analysis_folder = args.analysis_folder
+    else:
+        analysis_folder = ''
+
     if '2d' in args.log_folder:
         meta = args.meta
     else:
@@ -62,8 +67,9 @@ if __name__ == '__main__':
         recipe='2d',
         analysis_base_path=analysis_folder,
         map_meta_data=meta,
-    ).plot_performance().plot_prediction(
-        masked_images=[], best_num=2, worst_num=2
-    ).load_best_model(monitor=args.monitor)
+    ).plot_performance()
+    # .plot_prediction(
+    #     masked_images=[], best_num=2, worst_num=2
+    # ).load_best_model(monitor=args.monitor)
     if analysis_folder:
         exp.plot_prediction(best_num=2, worst_num=2)
