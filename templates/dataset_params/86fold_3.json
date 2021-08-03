@@ -1,0 +1,23 @@
+{
+    "class_name": "H5Reader",
+    "config": {
+        "filename": "/home/work/aurogr/hn_delin/ascc_5fold_dataset_ds86.h5",
+        "batch_size": 16,
+        "x_name": "input",
+        "y_name": "target",
+        "batch_cache": 10,
+        "shuffle": true,
+        "train_folds": [
+            0,
+            1,
+            2,
+            4
+        ],
+        "val_folds": [
+            3
+        ],
+        "test_folds": [
+            3
+        ]
+    }
+}

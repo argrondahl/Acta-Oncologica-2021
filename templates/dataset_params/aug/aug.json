@@ -1,0 +1,7 @@
+{
+    "augmentations": {
+        "class_name": "ElasticDeformPreprocesser",
+        "config": {
+        }
+    }
+}

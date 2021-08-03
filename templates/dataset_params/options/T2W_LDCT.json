@@ -1,0 +1,18 @@
+{
+    "preprocessors": [
+        {
+            "class_name": "ChannelSelector",
+            "config": {
+                "channel": [1,5]
+            }
+        },
+        {
+            "class_name": "HounsfieldWindowingPreprocessor",
+            "config": {
+                "window_center": 32,
+                "window_width": 220,
+                "channel": 0
+            }
+        }
+    ]
+}

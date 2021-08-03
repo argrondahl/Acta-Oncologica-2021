@@ -1,0 +1,10 @@
+{
+    "preprocessors": [
+        {
+            "class_name": "ChannelSelector",
+            "config": {
+                "channel": [3,5]
+            }
+        }
+    ]
+}
