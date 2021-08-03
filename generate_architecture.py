@@ -41,40 +41,40 @@ if __name__ == "__main__":
         n_class=2 # number of labels
     )
 
-    # Densenet
-    generate_densenet_2d_json(
-        '../architecture.json', # the filename
-        n_upsampling=4, # number of downsampling layers (transition down step)
-        n_filter=48,
-        # number of filters in the 1st conv layer. This number increases by 16 in each downsampling step.
-        # With n_upsampling=4 and n_filter=48, the number of filters in the Dense will go 48 - 64 - 80 - 96 - 112 - 96 - 80 - 64 - 48
-        # You can provide a list of number of filters associate with each block in the DenseNet.
-        # The list should contain {n_upsampling + 1} items.
-        # For example, in the case of n_upsampling=4, n_filter could be [48, 64, 80, 96, 112]
-        dense_block=3,
-        # number of conv layers in the 1st dense block. This number increases by 1 in each downsampling step
-        # Similar to n_filter, you can provide a list of number associated with each dense block in the DenseNet.
-        # The list should contain {n_upsampling + 1} items.
-        # For example, in the case of n_upsampling=4, dense_block could be [3, 4, 5, 6, 7] or [3, 3, 4, 4, 5]
-        batchnorm=False,  # The original paper did not use batch normalization
-        activation='relu',
-        dropout_rate=0,
-        kernel=3,
-        stride=2, # number of strides use in each downsampling steps and upsampling step
-        n_class=2
-    )
+    # # Densenet
+    # generate_densenet_2d_json(
+    #     '../architecture.json', # the filename
+    #     n_upsampling=4, # number of downsampling layers (transition down step)
+    #     n_filter=48,
+    #     # number of filters in the 1st conv layer. This number increases by 16 in each downsampling step.
+    #     # With n_upsampling=4 and n_filter=48, the number of filters in the Dense will go 48 - 64 - 80 - 96 - 112 - 96 - 80 - 64 - 48
+    #     # You can provide a list of number of filters associate with each block in the DenseNet.
+    #     # The list should contain {n_upsampling + 1} items.
+    #     # For example, in the case of n_upsampling=4, n_filter could be [48, 64, 80, 96, 112]
+    #     dense_block=3,
+    #     # number of conv layers in the 1st dense block. This number increases by 1 in each downsampling step
+    #     # Similar to n_filter, you can provide a list of number associated with each dense block in the DenseNet.
+    #     # The list should contain {n_upsampling + 1} items.
+    #     # For example, in the case of n_upsampling=4, dense_block could be [3, 4, 5, 6, 7] or [3, 3, 4, 4, 5]
+    #     batchnorm=False,  # The original paper did not use batch normalization
+    #     activation='relu',
+    #     dropout_rate=0,
+    #     kernel=3,
+    #     stride=2, # number of strides use in each downsampling steps and upsampling step
+    #     n_class=2
+    # )
 
 
-    # Resnet
-    generate_resnet_json(
-        '../architecture.json',
-        n_upsampling=3,
-        n_filter=64, # number of filters in all conv layers
-        res_block=2, # number of residual block after each downsampling step (maxpool)
-        batchnorm=True,
-        activation='relu',
-        dropout_rate=0,
-        kernel=3,
-        stride=2,
-        n_class=2
-    )
+    # # Resnet
+    # generate_resnet_json(
+    #     '../architecture.json',
+    #     n_upsampling=3,
+    #     n_filter=64, # number of filters in all conv layers
+    #     res_block=2, # number of residual block after each downsampling step (maxpool)
+    #     batchnorm=True,
+    #     activation='relu',
+    #     dropout_rate=0,
+    #     kernel=3,
+    #     stride=2,
+    #     n_class=2
+    # )

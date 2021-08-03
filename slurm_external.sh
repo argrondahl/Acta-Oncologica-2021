@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1               # 1 core(CPU)
 #SBATCH --nodes=1                # Use 1 node
-#SBATCH --job-name=hn_test   # sensible name for the job
+#SBATCH --job-name=anal_external   # sensible name for the job
 #SBATCH --mem=16G                 # Default memory per CPU is 3GB.
 #SBATCH --partition=gpu # Use the verysmallmem-partition for jobs requiring < 10 GB RAM.
 #SBATCH --gres=gpu:1
@@ -49,4 +49,4 @@ echo "Finished seting up files."
 nvidia-modprobe -u -c=0
 
 # Run test on external data
-singularity exec --nv deoxys-beta.sif python -u test_experiment_external.py $3 $HOME/hnperf/$2 $1
+singularity exec --nv deoxys.sif python -u run_external.py $1 $HOME/hnperf/$2 --temp_folder $SCRATCH/hnperf/$2 --analysis_folder $SCRATCH/analysis/$2 ${@:3}

@@ -83,7 +83,7 @@ sbatch slurm_external.sh ../hnperf/2d_unet_CT_W_PET/model/model.030.h5 2d_unet_C
 
 Manually build the singularity image file
 ```
-singularity build --fakeroot Singularity deoxys.sif
+singularity build --fakeroot deoxys.sif Singularity
 ```
 
 Login to a gpu session to use the gpu

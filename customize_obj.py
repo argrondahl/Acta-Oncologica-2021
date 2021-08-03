@@ -2,183 +2,113 @@ import h5py
 import numpy as np
 import pandas as pd
 import os
+import cv2
+import random
+from scipy.ndimage.interpolation import map_coordinates
+from scipy.ndimage.filters import gaussian_filter
+from deoxys.data import BasePreprocessor
+from deoxys.customize import custom_preprocessor
 
 
-class H5Metric:
-    def __init__(self, ref_file, save_file, metric_name='score',
-                 predicted_dataset='predicted',
-                 target_dataset='y', batch_size=4,
-                 map_file=None, map_column=None):
-        self.metric_name = metric_name
-        self.ref_file = ref_file
+@custom_preprocessor
+class ElasticDeformPreprocesser(BasePreprocessor):
+    """
+    """
+    SHOULD_AUGMENT = True
 
-        self.predicted = predicted_dataset
-        self.target = target_dataset
-        self.batch_size = batch_size
+    def __init__(self, alpha=None, sigma=None, alpha_affine=None):
+        """
+        Parameters:
+        ----------
+        alpha : int
+            scaling factor. Controls the intensity of the deformation.
+            If alpha > threshold, the displacement become close to a affine transformation.
+            If alpha is very large (>> threshold) the displacement become translations.
 
-        self.res_file = save_file
-        self.map_file = map_file
-        self.map_column = map_column
+        sigma : float
+            standard deviation for the filter, given in voxels. Elasticity coefficient.
 
-    def get_img_batch(self):
-        self.scores = []
+        alpha_affine : float
+            distorting the image grid. The intensity of affine transformation applied.
 
-        if self.map_file is None:
-            with h5py.File(self.ref_file, 'r') as f:
-                size = f[self.target].shape[0]
+        """
+        self.alpha = 6.20 if alpha is None else alpha
+        self.sigma = 0.38 if sigma is None else sigma
+        self.alpha_affine = 0.10 if alpha_affine is None else alpha_affine
+        self.max_rotation = 50 # in degrees
 
-            for i in range(0, size, self.batch_size):
-                with h5py.File(self.ref_file, 'r') as f:
-                    predicted = f[self.predicted][i:i+self.batch_size]
-                    targets = f[self.target][i:i+self.batch_size]
-                yield targets, predicted
-        else:  # handle 3d with different sizes
-            map_df = pd.read_csv(self.map_file)
-            map_data = map_df[self.map_column].values
+    def affine(self, image, random_state):
 
-            for idx in map_data:
-                with h5py.File(self.ref_file, 'r') as f:
-                    predicted = f[self.predicted][str(idx)][:]
-                    targets = f[self.target][str(idx)][:]
-                yield np.expand_dims(targets, axis=0), np.expand_dims(predicted, axis=0)
+        """Perform affine transformation (rotation and shift) on image
 
-    def update_score(self, scores):
-        self.scores.extend(scores)
 
-    def save_score(self):
-        if os.path.isfile(self.res_file):
-            df = pd.read_csv(self.res_file)
-            df[f'{self.metric_name}'] = self.scores
+            rotation = random.uniform(-self.max_rotation, self.max_rotation)*(np.pi/180)
+            transformation = random.uniform(-transform_std, transform_std)
+
+            return [np.cos(rotation), np.sin(rotation), transformation
+                    -np.sin(rotation), np.cos(rotation), transformation]
+        """
+        shape = image.shape
+        shape_size = shape[:2]
+        transform_std = self.alpha_affine*image.shape[1]
+
+        center_square = np.float32(shape[:2]) // 2
+        square_size = min(shape[:2]) // 3
+
+        source = np.float32([center_square + square_size, [center_square[0]+square_size, center_square[1]-square_size], center_square - square_size])
+        destination = source + random_state.uniform(-transform_std, transform_std, size=source.shape).astype(np.float32)
+        M = cv2.getAffineTransform(source, destination)
+
+        return cv2.warpAffine(image, M, shape_size[::-1], borderMode=cv2.BORDER_REPLICATE)
+
+    def stretch_indices(self, image, random_state):
+        """Get stretching indices
+        """
+        
+        shape = image.shape
+        alpha = self.alpha*shape[1]
+        stretching_std = self.sigma*shape[1]
+
+        dx = gaussian_filter((random_state.rand(*shape) * 2 - 1), stretching_std) * alpha
+        dy = gaussian_filter((random_state.rand(*shape) * 2 - 1), stretching_std) * alpha
+
+        x, y, channel = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), np.arange(shape[2]))
+
+        return np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1)), np.reshape(channel, (-1, 1))
+
+    def elastic_transform(self, image, random_state=None):
+        """Elastic deformation of images as described in [Simard2003]_ (with modifications).
+        .. [Simard2003] Simard, Steinkraus and Platt, "Best Practices for
+         Convolutional Neural Networks applied to Visual Document Analysis", in
+         Proc. of the International Conference on Document Analysis and
+         Recognition, 2003.
+         https://www.microsoft.com/en-us/research/wp-content/uploads/2003/08/icdar03.pdf 
+
+        Based on https://gist.github.com/erniejunior/601cdf56d2b424757de5
+        Borrowed from: https://www.kaggle.com/bguberfain/elastic-transform-for-data-augmentation
+        """
+        if random_state is None:
+            random_state = np.random.RandomState(None)
+
+        image = self.affine(image, random_state)
+        #from ipdb import set_trace; set_trace()
+        indices = self.stretch_indices(image, random_state)
+
+        return map_coordinates(image, indices, order=1, mode='reflect').reshape(image.shape)
+
+    def transform(self, images, targets):
+        if not self.SHOULD_AUGMENT:
+            return images, targets
+        if random.randint(0,100) < 50:
+            images = images.copy()
+            images = images.astype(np.float32, copy=False)
+            imgs_tar = cv2.merge((images, targets.astype(np.float32, copy=False)))
+
+            transformed = self.elastic_transform(imgs_tar).astype(np.int32, copy=False)
+            deformed_imgs = transformed[...,:-1]
+            deformed_tars = transformed[...,-1]
+            
+            return deformed_imgs, deformed_tars.reshape(deformed_tars.shape[0],deformed_tars.shape[1],1)
         else:
-            df = pd.DataFrame(self.scores, columns=[f'{self.metric_name}'])
+            return images, targets
 
-        df.to_csv(self.res_file, index=False)
-
-    def post_process(self, **kwargs):
-        for targets, prediction in self.get_img_batch():
-            scores = self.calculate_metrics(
-                targets, prediction, **kwargs)
-            self.update_score(scores)
-
-        self.save_score()
-
-    def calculate_metrics(targets, predictions, **kwargs):
-        raise NotImplementedError
-
-
-class H5CalculateFScore(H5Metric):
-    def __init__(self, ref_file, save_file, metric_name='f1_score',
-                 predicted_dataset='predicted',
-                 target_dataset='y', batch_size=4, beta=1, threshold=None,
-                 map_file=None, map_column=None):
-        super().__init__(ref_file, save_file, metric_name,
-                         predicted_dataset,
-                         target_dataset, batch_size,
-                         map_file, map_column)
-        self.threshold = 0.5 if threshold is None else threshold
-        self.beta = beta
-
-    def calculate_metrics(self, y_true, y_pred, **kwargs):
-        assert len(y_true) == len(y_pred), "Shape not match"
-        eps = 1e-8
-        size = len(y_true.shape)
-        reduce_ax = tuple(range(1, size))
-
-        y_pred = (y_pred > self.threshold).astype(y_pred.dtype)
-
-        true_positive = np.sum(y_pred * y_true, axis=reduce_ax)
-        target_positive = np.sum(y_true, axis=reduce_ax)
-        predicted_positive = np.sum(y_pred, axis=reduce_ax)
-
-        fb_numerator = (1 + self.beta ** 2) * true_positive
-        fb_denominator = (
-            (self.beta ** 2) * target_positive + predicted_positive + eps
-        )
-
-        return fb_numerator / fb_denominator
-
-
-class H5MetaDataMapping:
-    def __init__(self, ref_file, save_file, folds, fold_prefix='fold',
-                 dataset_names=None):
-        self.ref_file = ref_file
-        self.save_file = save_file
-        if fold_prefix:
-            self.folds = ['{}_{}'.format(
-                fold_prefix, fold) for fold in folds]
-        else:
-            self.folds = folds
-
-        self.dataset_names = dataset_names
-
-    def post_process(self, *args, **kwargs):
-        data = {dataset_name: [] for dataset_name in self.dataset_names}
-        for fold in self.folds:
-            with h5py.File(self.ref_file, 'r') as f:
-                for dataset_name in self.dataset_names:
-                    data[dataset_name].extend(f[fold][dataset_name][:])
-
-        df = pd.DataFrame(data)
-        df.to_csv(self.save_file, index=False)
-
-
-class H5Merge2dSlice:
-    def __init__(self, ref_file, map_file, map_column, merge_file, save_file,
-                 predicted_dataset='predicted', target_dataset='y',
-                 input_dataset='x'):
-        self.ref_file = ref_file
-        self.map_file = map_file
-        self.map_column = map_column
-        self.merge_file = merge_file
-        self.save_file = save_file
-
-        self.predicted = predicted_dataset
-        self.target = target_dataset
-        self.inputs = input_dataset
-
-    def post_process(self):
-        map_df = pd.read_csv(self.map_file)
-        map_data = map_df[self.map_column].values
-
-        unique_val = []
-
-        first, last = map_data[0], map_data[-1]
-
-        tmp = np.concatenate([[first], map_data, [last]])
-        indice = np.where(tmp[1:] != tmp[:-1])[0]
-        indice = np.concatenate([[0], indice, [len(map_data)]])
-
-        with h5py.File(self.merge_file, 'w') as mf:
-            mf.create_group(self.inputs)
-            mf.create_group(self.target)
-            mf.create_group(self.predicted)
-
-        for i in range(len(indice) - 1):
-            start = indice[i]
-            end = indice[i+1]
-
-            unique_val.append(map_data[start])
-
-            assert map_data[start] == map_data[end-1], "id not match"
-
-            curr_name = str(map_data[start])
-            with h5py.File(self.ref_file, 'r') as f:
-                img = f[self.inputs][start:end]
-            with h5py.File(self.merge_file, 'a') as mf:
-                mf[self.inputs].create_dataset(
-                    curr_name, data=img, compression="gzip")
-
-            with h5py.File(self.ref_file, 'r') as f:
-                img = f[self.target][start:end]
-            with h5py.File(self.merge_file, 'a') as mf:
-                mf[self.target].create_dataset(
-                    curr_name, data=img, compression="gzip")
-
-            with h5py.File(self.ref_file, 'r') as f:
-                img = f[self.predicted][start:end]
-            with h5py.File(self.merge_file, 'a') as mf:
-                mf[self.predicted].create_dataset(
-                    curr_name, data=img, compression="gzip")
-
-        df = pd.DataFrame(data=unique_val, columns=[self.map_column])
-        df.to_csv(self.save_file, index=False)

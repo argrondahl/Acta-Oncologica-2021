@@ -1,10 +1,11 @@
 #!/bin/bash
 #SBATCH --ntasks=1               # 1 core(CPU)
 #SBATCH --nodes=1                # Use 1 node
-#SBATCH --job-name=msc_unet   # sensible name for the job
-#SBATCH --mem=8G                 # Default memory per CPU is 3GB.
+#SBATCH --job-name=anal_train   # sensible name for the job
+#SBATCH --mem=16G                 # Default memory per CPU is 3GB.
 #SBATCH --partition=gpu # Use the verysmallmem-partition for jobs requiring < 10 GB RAM.
 #SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=16
 #SBATCH --mail-user=user.name@nmbu.no # Email me when job is done.
 #SBATCH --mail-type=ALL
 #SBATCH --output=outputs/unet-%A.out
@@ -49,4 +50,7 @@ echo "Finished seting up files."
 nvidia-modprobe -u -c=0
 
 # Run experiment
-singularity exec --nv deoxys.sif python experiment.py $1 $HOME/hnperf/$2 --epochs $3 ${@:4}
+export NUM_CPUS=4
+export RAY_ROOT=$TMPDIR/$USER/ray
+
+singularity exec --nv deoxys.sif python experiment.py $1 $HOME/hnperf/$2 --temp_folder $SCRATCH/hnperf/$2 --analysis_folder $SCRATCH/analysis/$2 --epochs $3 ${@:4}
