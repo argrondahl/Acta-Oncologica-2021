@@ -7,7 +7,7 @@ as log file and perforamance plot.
 In addition, we can peek the result of 42 first images from prediction set.
 """
 
-from deoxys.experiment import Experiment
+from deoxys.experiment import Experiment, ExperimentPipeline
 from deoxys.utils import read_file
 import argparse
 # from pathlib import Path
