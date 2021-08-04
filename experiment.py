@@ -67,9 +67,13 @@ if __name__ == '__main__':
         recipe='2d',
         analysis_base_path=analysis_folder,
         map_meta_data=meta,
-    ).plot_performance()
-    # .plot_prediction(
+    ).plot_performance(
+    # ).plot_prediction(
     #     masked_images=[], best_num=2, worst_num=2
-    # ).load_best_model(monitor=args.monitor)
+    ).load_best_model(
+        monitor=args.monitor, use_raw_log=True
+    ).plot_prediction(
+        masked_images=[], best_num=2, worst_num=2
+    )
     if analysis_folder:
         exp.plot_prediction(best_num=2, worst_num=2)

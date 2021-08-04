@@ -1,4 +1,4 @@
-template = 'sbatch slurm.sh config/{ds}/{name}.json {name} 200 --model_checkpoint_period 1 --prediction_checkpoint_period 1'
+template = 'sbatch slurm.sh config/{ds}/{name}.json {name} 30 --model_checkpoint_period 1 --prediction_checkpoint_period 1 --monitor val_Dice'
 
 name_template = '{ds}_f{fold}_2d_{modality}{aug}'
 
