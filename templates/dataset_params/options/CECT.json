@@ -7,7 +7,7 @@
             }
         },
         {
-            "class_name": "HounsfieldWindowingPreprocessor",
+            "class_name": "WindowingPreprocessor",
             "config": {
                 "window_center": 70,
                 "window_width": 300,
