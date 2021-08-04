@@ -115,6 +115,6 @@ class ElasticDeformPreprocesser(BasePreprocessor):
 
     def transform(self, images, targets):
         for i, (image, target) in enumerate(zip(images, targets)):
-            images[i], targets[i] = self.transform(images[i], targets[i])
+            images[i], targets[i] = self._transform(images[i], targets[i])
 
         return images, targets
