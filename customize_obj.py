@@ -96,13 +96,13 @@ class ElasticDeformPreprocesser(BasePreprocessor):
 
         return map_coordinates(image, indices, order=1, mode='reflect').reshape(image.shape)
 
-    def transform(self, images, targets):
+    def _transform(self, images, targets):
         if not self.SHOULD_AUGMENT:
             return images, targets
         if random.randint(0,100) < 50:
             images = images.copy()
             images = images.astype(np.float32, copy=False)
-            print(images.shape, targets.shape)
+
             imgs_tar = cv2.merge((images, targets.astype(np.float32, copy=False)))
 
             transformed = self.elastic_transform(imgs_tar).astype(np.int32, copy=False)
@@ -112,3 +112,9 @@ class ElasticDeformPreprocesser(BasePreprocessor):
             return deformed_imgs, deformed_tars.reshape(deformed_tars.shape[0],deformed_tars.shape[1],1)
         else:
             return images, targets
+
+    def transform(self, images, targets):
+        for i, (image, target) in enumerate(zip(images, targets)):
+            images[i], targets[i] = self._transform(images[i], targets[i])
+
+        return images, targets

@@ -71,16 +71,18 @@ if __name__ == '__main__':
     )
     try:
         ex = ex.load_best_model(
-            recipe='auto',
+            recipe='2d',
             analysis_base_path=analysis_folder,
             map_meta_data=meta,
+            monitor=args.monitor,
+            use_raw_log=True
         )
     except Exception as e:
         print("Error while loading best model", e)
         ex.from_file(log_folder +
                      f'/model/model.{args.best_epoch:03d}.h5')
     ex.run_external(
-        args.dataset_file
+        args.dataset_file,
     ).apply_post_processors(
         recipe='2d',
         analysis_base_path=analysis_folder,
