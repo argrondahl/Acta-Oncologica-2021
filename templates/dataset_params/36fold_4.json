@@ -1,7 +1,7 @@
 {
     "class_name": "H5Reader",
     "config": {
-        "filename": "/home/work/aurogr/hn_delin/ascc_5fold_dataset_ds36.h5",
+        "filename": "/home/work/aurogr/hn_delin/ascc_5fold_all_ds36.h5",
         "batch_size": 16,
         "x_name": "input",
         "y_name": "target",
