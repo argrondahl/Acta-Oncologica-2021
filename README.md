@@ -91,3 +91,6 @@ Login to a gpu session to use the gpu
 qlogin --partition=gpu --gres=gpu:1
 singularity exec --nv deoxys.sif ipython
 ```
+
+# Results replication
+We used deoxys version 0.0.11 in this project. Other configurations can be found in the associated paper.
