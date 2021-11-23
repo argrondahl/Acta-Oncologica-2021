@@ -93,4 +93,4 @@ singularity exec --nv deoxys.sif ipython
 ```
 
 # Results replication
-We used deoxys version 0.0.11 in this project. Other configurations can be found in the associated paper.
+We used deoxys version 0.0.11 in this project. Other configurations can be found in the associated paper: https://doi.org/10.1080/0284186X.2021.1994645.
